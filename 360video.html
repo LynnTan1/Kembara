@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>360 Video with Hotspots</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #video-container {
+            width: 100%;
+            height: 100vh;
+        }
+        .hotspot-label {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="video-container"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/panolens@0.11.0/build/panolens.min.js"></script>
+<script>
+    // Create the Panolens Viewer
+    const viewer = new PANOLENS.Viewer({
+        container: document.getElementById('video-container'),
+        autoRotate: true,
+        autoRotateSpeed: 0.5
+    });
+
+    // Load the 360 video
+    const videoElement = document.createElement('video');
+    videoElement.src = '360.mp4'; // The path to your 360 video file
+    videoElement.crossOrigin = "anonymous";
+    videoElement.loop = true;
+    videoElement.muted = true; // Muting the video
+    videoElement.setAttribute('webkit-playsinline', ''); // For iOS
+    videoElement.setAttribute('playsinline', ''); // For other browsers
+
+    // Ensure the video plays automatically
+    videoElement.addEventListener('canplay', () => {
+        videoElement.play(); // Start playing the video when it is ready
+
+        // Create a VideoTexture from the video element
+        const videoTexture = new THREE.VideoTexture(videoElement);
+        videoTexture.minFilter = THREE.LinearFilter;
+        videoTexture.magFilter = THREE.LinearFilter;
+        videoTexture.format = THREE.RGBFormat;
+
+        // Create a Video Panorama and apply the video texture
+        const videoPanorama = new PANOLENS.VideoPanorama(videoElement);
+
+        // Add the 5 Hotspots
+        function createHotspot(label, position) {
+            const hotspot = new PANOLENS.Infospot(300, PANOLENS.DataImage.Info);
+            hotspot.position.set(position.x, position.y, position.z);
+            hotspot.addHoverText(label, 30);
+            return hotspot;
+        }
+
+        const hotspots = [
+            createHotspot('Hotspot 1', { x: 5000, y: 0, z: 0 }),
+            createHotspot('Hotspot 2', { x: -5000, y: 0, z: 0 }),
+            createHotspot('Hotspot 3', { x: 0, y: 5000, z: 0 }),
+            createHotspot('Hotspot 4', { x: 0, y: -5000, z: 0 }),
+            createHotspot('Hotspot 5', { x: 0, y: 0, z: 5000 })
+        ];
+
+        hotspots.forEach(hotspot => videoPanorama.add(hotspot));
+
+        // Add the Panorama to the Viewer
+        viewer.add(videoPanorama);
+    });
+
+    // Trigger video loading
+    videoElement.load();
+
+</script>
+
+</body>
+</html>
